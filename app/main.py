@@ -1,19 +1,25 @@
 # app/main.py
 import streamlit as st
 import yaml
-from fuzzywuzzy import process, fuzz
+from difflib import SequenceMatcher
 
+MAX_DISPLAYED_MATCHES = 5
 
 def find_closest_matches(input_name, name_list):
-    matches = process.extract(input_name, name_list, limit=None, scorer=fuzz.partial_ratio)
-    filtered_matches = [{'name': name, 'similarity': score} for name, score in matches]
-    return filtered_matches
+    matches = [{'name': name, 'similarity': calculate_similarity(input_name.lower(), name.lower())} for name in name_list]
+    return sorted(matches, key=lambda x: x['similarity'], reverse=True)
 
+def calculate_similarity(a, b):
+    return round(SequenceMatcher(None, a, b).ratio() * 100)
 
 def load_name_list():
     with open("data/names.yaml", "r") as file:
         return yaml.safe_load(file)
 
+def display_similarity_bar(similarity, label):
+    # Display a progress bar for similarity with additional information
+    st.write(f"{label} --- {similarity}%")
+    st.progress(similarity / 100.0)
 
 def main():
     st.title("Name Matching App")
@@ -28,20 +34,17 @@ def main():
         # Find all matches
         matches = find_closest_matches(input_name, name_list)
 
-        # Display results
-        st.markdown(f"### Matches for '{input_name}':")
+        # Display matches
+        st.markdown(f"### Matches for {input_name}:")
 
-        # Display up to 5 matches above the 70% threshold
-        above_threshold = [match for match in matches if match['similarity'] >= 70][:5]
-        for match in above_threshold:
-            st.write(f"{match['name']}, Similarity: {match['similarity']}%")
+        total_displayed = 0
+        for match in matches:
+            if total_displayed < MAX_DISPLAYED_MATCHES:
+                total_displayed += 1
+                display_similarity_bar(match['similarity'], f"{match['name']}")
 
-        # Display up to (5 - len(above_threshold)) matches below the 70% threshold in another font style
-        st.markdown("#### Weak matches:")
-        below_threshold = [match for match in matches if match['similarity'] < 70][:5 - len(above_threshold)]
-        for match in below_threshold:
-            st.write(f"{match['name']}, Similarity: {match['similarity']}%")
-
+        if total_displayed == 0:
+            st.write(f"Pas de résultats similaires retrouvés")
 
 if __name__ == "__main__":
     main()
