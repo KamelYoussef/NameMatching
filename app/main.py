@@ -1,25 +1,9 @@
-# app/main.py
 import streamlit as st
-import yaml
-from difflib import SequenceMatcher
+from utils.data_loader import load_name_list
+from utils.similarity_calculator import find_closest_matches
+from utils.display_utils import display_similarity_bar
 
 MAX_DISPLAYED_MATCHES = 5
-
-def find_closest_matches(input_name, name_list):
-    matches = [{'name': name, 'similarity': calculate_similarity(input_name.lower(), name.lower())} for name in name_list]
-    return sorted(matches, key=lambda x: x['similarity'], reverse=True)
-
-def calculate_similarity(a, b):
-    return round(SequenceMatcher(None, a, b).ratio() * 100)
-
-def load_name_list():
-    with open("data/names.yaml", "r") as file:
-        return yaml.safe_load(file)
-
-def display_similarity_bar(similarity, label):
-    # Display a progress bar for similarity with additional information
-    st.write(f"{label} --- {similarity}%")
-    st.progress(similarity / 100.0)
 
 def main():
     st.title("Name Matching App")
@@ -44,7 +28,7 @@ def main():
                 display_similarity_bar(match['similarity'], f"{match['name']}")
 
         if total_displayed == 0:
-            st.write(f"Pas de résultats similaires retrouvés")
+            st.write(f"No similar results found.")
 
 if __name__ == "__main__":
     main()
