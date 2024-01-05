@@ -47,7 +47,7 @@ if st.button("Search"):
     matches = matcher.match_names(to_be_matched=df_companies_b,
                                   column_matching='name')
 
-    # Display the matched names and scores
+    # Display the matched names and scoresb
     st.header("Top 5 Similar Names:")
     for i in range(NUMBER_OF_MATCHES):
         display_similarity_bar(matches[f'score_{i}'][0], f"{matches[f'match_name_{i}'][0]}")
